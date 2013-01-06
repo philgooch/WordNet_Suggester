@@ -1,0 +1,5 @@
+<CREOLE-DIRECTORY ID="org.philgooch.WordNetSuggester" VERSION="0.1" GATE-MIN="6.1" DESCRIPTION="wraps the GATE WordNet API to automate the addition of WordNet features (synonyms, hypernyms, antonyms) to input annotations">
+  <CREOLE>
+      <JAR SCAN="true">WordNetSuggester.jar</JAR>
+  </CREOLE>
+</CREOLE-DIRECTORY>
