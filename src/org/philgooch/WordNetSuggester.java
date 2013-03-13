@@ -48,6 +48,7 @@ public class WordNetSuggester extends AbstractLanguageAnalyser implements
     private Integer shortestWord;       // ignore words under this threshold
     private Boolean ignoreMissingInputFeature;     // if true, don't use underlying annotation content if no inputASTypeFeatures exist
     private Boolean addGloss;                       // output WordNet gloss
+    private Boolean outputFullHypernymHierarchy;              // if true, output full class hierarchy
 
     private OutputFormat outputListFormat;      // Output Lists as strings or as a List object
     // Exit gracefully if exception caught on init()
@@ -75,8 +76,11 @@ public class WordNetSuggester extends AbstractLanguageAnalyser implements
 
         // Default input to WordNet is by Token
         inputASTypes = new ArrayList<String>();
-        inputASTypes.add("Token");
+        inputASTypes.add(ANNIEConstants.TOKEN_ANNOTATION_TYPE);
 
+        inputASTypeFeatures = new ArrayList<String>();
+        inputASTypeFeatures.add(ANNIEConstants.TOKEN_STRING_FEATURE_NAME);
+        
         // If there is an instance of the WordNet LR already loaded, use that,
         // otherwise, load a new instance of the WordNet LR
         try {
@@ -118,7 +122,7 @@ public class WordNetSuggester extends AbstractLanguageAnalyser implements
         // Get all Tokens that are words
         FeatureMap tokFeats = Factory.newFeatureMap();
 
-        tokFeats.put("kind", "word");
+        tokFeats.put(ANNIEConstants.TOKEN_KIND_FEATURE_NAME, "word");
         AnnotationSet tokenAS = (tokASName == null || tokASName.trim().length() == 0) ? document.getAnnotations().get(tokName, tokFeats) : document.getAnnotations(tokASName).get(tokName, tokFeats);
 
         String docContent = document.getContent().toString();
@@ -476,10 +480,26 @@ public class WordNetSuggester extends AbstractLanguageAnalyser implements
             this.addFeature("antonyms", fm, synList);
             synList.clear();
 
-            synList.addAll(getSemanticRelation(s, SemanticRelation.REL_HYPERNYM));
-            this.addFeature("hypernyms", fm, synList);
-            synList.clear();
+            // HYPERNYMS
+            List<String> hypernymList = new ArrayList<String>();
+            if (outputFullHypernymHierarchy) {
+                List<SemanticRelation> hypernyms = s.getSemanticRelations(SemanticRelation.REL_HYPERNYM);
+                while (! hypernyms.isEmpty()) {
+                    for (SemanticRelation hypernym : hypernyms) {
+                        Synset target = hypernym.getTarget();
+                        List<WordSense> srTargetList = target.getWordSenses();
+                        for (WordSense targWs : srTargetList) {
+                            hypernymList.add(targWs.getWord().getLemma());
+                        }
+                        hypernyms = target.getSemanticRelations(SemanticRelation.REL_HYPERNYM);
+                    }
+                }
+            } else {
+                hypernymList = getSemanticRelation(s, SemanticRelation.REL_HYPERNYM);
+            }
+            this.addFeature("hypernyms", fm, hypernymList);
 
+            // HYPONYMS
             synList.addAll(getSemanticRelation(s, SemanticRelation.REL_HYPONYM));
             this.addFeature("hyponyms", fm, synList);
             synList.clear();
@@ -809,7 +829,7 @@ public class WordNetSuggester extends AbstractLanguageAnalyser implements
     }
 
     @RunTime
-    @CreoleParameter(defaultValue = "true",
+    @CreoleParameter(defaultValue = "false",
     comment = "If true, don't attempt to use underlying annotation content if no inputASTypeFeatures found")
     public void setIgnoreMissingInputFeature(Boolean ignoreMissingInputFeature) {
         this.ignoreMissingInputFeature = ignoreMissingInputFeature;
@@ -830,6 +850,15 @@ public class WordNetSuggester extends AbstractLanguageAnalyser implements
         return addGloss;
     }
 
+    @RunTime
+    @CreoleParameter(defaultValue = "false",
+    comment = "Output the full WordNet hypernym hierarchy?")
+    public void setoutputFullHypernymHierarchy(Boolean outputFullHypernymHierarchy) {
+        this.outputFullHypernymHierarchy = outputFullHypernymHierarchy;
+    }
 
+    public Boolean getoutputFullHypernymHierarchy() {
+        return outputFullHypernymHierarchy;
+    }
 
 }
