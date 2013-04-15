@@ -18,6 +18,14 @@ configFileURL: path to the WordNet configuration file. The example file provided
 - Run-time
 ----------------
 
+addGloss:	Output the WordNet gloss? Defaults to false.
+
+attemptFullMatch:	Set this to true if inputASTypes contains an annotation type other than Token, as multi-word expressions may be matched.
+
+excludeIfContains:	Ignore any input annotation that contains one of these annotation types.
+
+excludeIfWithin:	Ignore any input annotation if it is within one of these annotation types.		
+
 inputASName: Input AnnotationSet name. Optional, leave blank for default annotation set.
 
 inputASTypeFeature: Name of the feature on inputASTypes from which to extract strings for input to WordNet. Optional, leave blank to use the string content of inputASTypes.
@@ -27,6 +35,8 @@ inputASTypes: List of input annotations from which to extract strings for input 
 outputASName: Output AnnotationSet name. Optional. Only used if outputASType is set.
 
 outputASType: Create new annotations with this name, to hold the WordNet output. Optional.
+
+outputFullHypernymHierarchy: Set this to true to output the full WordNet hierarchy for each hypernym.
 
 outputListFormat: Set to 'String' so that WordNet ArrayList<String> output can be matched with JAPE LHS expressions. Set to 'List' so that WordNet output can be iterated over with JAPE RHS expressions.
 
